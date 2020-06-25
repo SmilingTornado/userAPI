@@ -6,10 +6,11 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "clean-css": "^4.2.3",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
-    "firebase": "^7.15.3",
+    "firebase": "^7.15.4",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "pug": "2.0.0-beta11"
