@@ -3,10 +3,10 @@ let router = express.Router();
 const db = require('../../../lib/firebase');
 
 /* GET users listing. */
-router.get('/', function (req, res, next) {
+router.get('/', async function (req, res, next) {
   let out = { 'users': [] };
   let users = db.collection('users');
-  let allUsers = users.get()
+  let allUsers = await users.get()
     .then(snapshot => {
       snapshot.forEach(doc => {
         out.users.push(doc.data());
@@ -18,21 +18,23 @@ router.get('/', function (req, res, next) {
     });
 });
 
-router.post('/', function (req, res, next) {
+router.post('/', async function (req, res, next) {
   let user_id = req.body.user_id;
   let users = db.collection('users');
-  let user = users.where("user_id", "==", user_id).get()
-    .then(snapshot => {
+  let user = await users.where("user_id", "==", user_id).get()
+    .then(async (snapshot) => {
       if (snapshot.empty) {
         let newUser = db.collection('users').doc();
         newUser.set(req.body);
-        newUser.get()
-          .then(doc => {
-            res.send(doc.data());
-            return;
-          });
+        return newUser.get()
       } else {
-        res.send({ 'error': 'user ' + user_id + ' already exists' });
+        throw({ 'error': 'user ' + user_id + ' already exists' });
+      }
+    })
+    .then(doc => {
+      if (doc) {
+        res.send(doc.data());
+        return;
       }
     })
     .catch(err => {
@@ -43,7 +45,8 @@ router.post('/', function (req, res, next) {
 router.get('/:userId', async function (req, res, next) {
   let user_id = req.params.userId;
   let users = db.collection('users');
-  let userQuery = await users.where("user_id", "==", user_id);
+  let userQuery = await users
+    .where("user_id", "==", user_id);
   let userQuerySet = await userQuery.get();
   if (userQuerySet.empty) {
     res.send({ 'error': 'user ' + user_id + ' not found' });
@@ -52,7 +55,10 @@ router.get('/:userId', async function (req, res, next) {
     user = userQuerySet.docs[0];
     let out = user.data();
     out.skills = [];
-    let skills = await db.collection('users').doc(user.id).collection('skills').get();
+    let skills = await db
+      .collection('users')
+      .doc(user.id).collection('skills')
+      .get();
     skills.forEach(skill => {
       out.skills.push(skill.data())
     })
@@ -70,7 +76,9 @@ router.put('/:userId', async function (req, res, next) {
     } else {
       let change = await db.collection('users').doc(user.docs[0].id)
       if ('user_id' in req.body) {
-        let doc = db.collection('users').where('user_id', '==', req.body.user_id).get();
+        let doc = db.collection('users')
+          .where('user_id', '==', req.body.user_id)
+          .get();
         if (doc.empty) {
           change.set(req.body)
           let changed = await change.get()

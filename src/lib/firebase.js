@@ -32,14 +32,5 @@ const firestore = () => {
   return initFirestore
 }
 
-const firebase_auth = () => {
-  initFirebase()
-
-  if ( !initFirebaseAuth ) {
-    initFirebaseAuth = firebase.auth()
-  }
-
-  return initFirebaseAuth
-}
 
 module.exports =  firestore();
